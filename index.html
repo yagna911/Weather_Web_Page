@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Station — Weather Dashboard</title>
+<meta name="description" content="A minimal, instrument-panel style weather dashboard.">
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<div class="app">
+
+  <!-- ===== Header ===== -->
+  <header class="topbar">
+    <div class="brand">
+      <span class="brand-mark" aria-hidden="true">◎</span>
+      <span class="brand-name">STATION</span>
+    </div>
+
+    <form class="search" id="searchForm" role="search">
+      <input
+        type="text"
+        id="searchInput"
+        class="search-input"
+        placeholder="Search a city…"
+        autocomplete="off"
+        aria-label="Search for a city"
+      >
+      <button type="submit" class="search-btn" aria-label="Search">
+        <svg viewBox="0 0 24 24" width="16" height="16"><path d="M21 21l-4.35-4.35M11 18a7 7 0 100-14 7 7 0 000 14z" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round"/></svg>
+      </button>
+    </form>
+
+    <button class="locate-btn" id="locateBtn" title="Use current location" aria-label="Use current location">
+      <svg viewBox="0 0 24 24" width="16" height="16"><path d="M12 2v3M12 19v3M2 12h3M19 12h3M12 8a4 4 0 100 8 4 4 0 000-8z" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round"/></svg>
+    </button>
+  </header>
+
+  <!-- ===== Status line (loading / error) ===== -->
+  <p class="status-line" id="statusLine" role="status" aria-live="polite"></p>
+
+  <main id="dashboard" class="dashboard" hidden>
+
+    <!-- ===== Location + time ===== -->
+    <div class="location-row">
+      <div>
+        <h1 class="location-name" id="locationName">—</h1>
+        <p class="location-sub" id="locationSub">—</p>
+      </div>
+      <div class="local-clock">
+        <span class="clock-label">LOCAL</span>
+        <span class="clock-time" id="clockTime">--:--</span>
+      </div>
+    </div>
+
+    <!-- ===== Hero: current conditions ===== -->
+    <section class="hero panel">
+      <div class="hero-main">
+        <div class="hero-icon" id="heroIcon" aria-hidden="true"></div>
+        <div class="hero-temp-block">
+          <span class="hero-temp" id="heroTemp">--°</span>
+          <span class="hero-desc" id="heroDesc">—</span>
+        </div>
+      </div>
+      <p class="hero-feels">Feels like <span id="heroFeels">--°</span> · H <span id="heroHigh">--°</span> L <span id="heroLow">--°</span></p>
+    </section>
+
+    <!-- ===== Instrument row: humidity / wind / pressure / uv ===== -->
+    <section class="instruments">
+
+      <div class="instrument panel">
+        <span class="instrument-label">HUMIDITY</span>
+        <span class="instrument-value" id="humidityValue">--%</span>
+        <div class="humidity-bar"><div class="humidity-fill" id="humidityFill"></div></div>
+      </div>
+
+      <div class="instrument panel">
+        <span class="instrument-label">WIND</span>
+        <span class="instrument-value" id="windValue">-- mph</span>
+        <svg class="compass" id="compass" viewBox="0 0 80 80" aria-hidden="true">
+          <circle cx="40" cy="40" r="34" class="compass-ring"/>
+          <text x="40" y="12" class="compass-tick" text-anchor="middle">N</text>
+          <text x="68" y="43" class="compass-tick" text-anchor="middle">E</text>
+          <text x="40" y="74" class="compass-tick" text-anchor="middle">S</text>
+          <text x="12" y="43" class="compass-tick" text-anchor="middle">W</text>
+          <g id="compassNeedle" transform="rotate(0 40 40)">
+            <polygon points="40,14 34,42 40,36 46,42" class="needle-head"/>
+            <polygon points="40,66 34,44 40,50 46,44" class="needle-tail"/>
+          </g>
+        </svg>
+      </div>
+
+      <div class="instrument panel">
+        <span class="instrument-label">PRESSURE</span>
+        <span class="instrument-value" id="pressureValue">-- hPa</span>
+        <svg class="sparkline" id="sparkline" viewBox="0 0 120 36" preserveAspectRatio="none" aria-hidden="true">
+          <polyline id="sparklinePath" points="" fill="none"/>
+        </svg>
+      </div>
+
+      <div class="instrument panel">
+        <span class="instrument-label">UV INDEX</span>
+        <span class="instrument-value" id="uvValue">--</span>
+        <span class="uv-scale" id="uvScale">—</span>
+      </div>
+
+    </section>
+
+    <!-- ===== Hourly strip ===== -->
+    <section class="hourly panel">
+      <h2 class="section-title">NEXT 24 HOURS</h2>
+      <div class="hourly-track" id="hourlyTrack"></div>
+    </section>
+
+    <!-- ===== 5-day forecast ===== -->
+    <section class="forecast">
+      <h2 class="section-title">5-DAY FORECAST</h2>
+      <div class="forecast-grid" id="forecastGrid"></div>
+    </section>
+
+  </main>
+
+  <footer class="footer">
+    <span>Data: Open-Meteo</span>
+  </footer>
+
+</div>
+
+<script src="script.js"></script>
+</body>
+</html>
