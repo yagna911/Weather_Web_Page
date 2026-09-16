@@ -10,6 +10,9 @@ const els = {
   form: document.getElementById('searchForm'),
   input: document.getElementById('searchInput'),
   locateBtn: document.getElementById('locateBtn'),
+  unitToggle: document.getElementById('unitToggle'),
+  unitC: document.getElementById('unitC'),
+  unitF: document.getElementById('unitF'),
   status: document.getElementById('statusLine'),
   dashboard: document.getElementById('dashboard'),
 
@@ -39,6 +42,12 @@ const els = {
 
 let clockInterval = null;
 let utcOffsetSeconds = 0;
+
+// 'metric' -> °C + km/h, 'imperial' -> °F + mph. Default to metric:
+// showing a bare "84°" with no unit is what caused the original mix-up,
+// so the toggle now keeps the active unit visibly highlighted at all times.
+let unitSystem = 'metric';
+let currentLocation = null; // remembered so the toggle can re-render without a new search
 
 /* ---------- WMO weather code → { label, group } ---------- */
 
@@ -143,15 +152,15 @@ async function reverseFromCoords(lat, lon) {
 
 /* ---------- Forecast ---------- */
 
-async function fetchForecast(lat, lon) {
+async function fetchForecast(lat, lon, units) {
   const params = new URLSearchParams({
     latitude: lat,
     longitude: lon,
     current: 'temperature_2m,relative_humidity_2m,apparent_temperature,weather_code,wind_speed_10m,wind_direction_10m,surface_pressure',
     hourly: 'temperature_2m,weather_code,surface_pressure',
     daily: 'weather_code,temperature_2m_max,temperature_2m_min,uv_index_max',
-    temperature_unit: 'fahrenheit',
-    wind_speed_unit: 'mph',
+    temperature_unit: units === 'imperial' ? 'fahrenheit' : 'celsius',
+    wind_speed_unit: units === 'imperial' ? 'mph' : 'kmh',
     timezone: 'auto',
     forecast_days: '6',
   });
@@ -197,7 +206,8 @@ function renderInstruments(current, hourlyPressures) {
   requestAnimationFrame(() => { els.humidityFill.style.width = `${h}%`; });
 
   // wind + compass
-  els.windValue.textContent = `${Math.round(current.wind_speed_10m)} mph`;
+  const windUnitLabel = unitSystem === 'imperial' ? 'mph' : 'km/h';
+  els.windValue.textContent = `${Math.round(current.wind_speed_10m)} ${windUnitLabel}`;
   els.compassNeedle.setAttribute('transform', `rotate(${current.wind_direction_10m} 40 40)`);
 
   // pressure + sparkline (last ~24 readings)
@@ -286,11 +296,17 @@ function renderForecast(daily) {
   });
 }
 
+function renderUnitToggle() {
+  els.unitC.classList.toggle('is-active', unitSystem === 'metric');
+  els.unitF.classList.toggle('is-active', unitSystem === 'imperial');
+}
+
 /* ---------- Orchestration ---------- */
 
 async function loadWeatherFor(loc) {
+  currentLocation = loc;
   setStatus('Fetching forecast…');
-  const data = await fetchForecast(loc.lat, loc.lon);
+  const data = await fetchForecast(loc.lat, loc.lon, unitSystem);
 
   window.__uvToday = data.daily.uv_index_max ? data.daily.uv_index_max[0] : undefined;
 
@@ -300,6 +316,7 @@ async function loadWeatherFor(loc) {
   renderInstruments(data.current, data.hourly.surface_pressure);
   renderHourly(data.hourly, data.current.time);
   renderForecast(data.daily);
+  renderUnitToggle();
 
   els.dashboard.hidden = false;
   setStatus('');
@@ -334,6 +351,16 @@ async function handleGeolocate() {
   );
 }
 
+function handleUnitToggle() {
+  unitSystem = unitSystem === 'metric' ? 'imperial' : 'metric';
+  renderUnitToggle();
+  if (currentLocation) {
+    loadWeatherFor(currentLocation).catch((err) => {
+      setStatus(err.message || 'Could not refresh with the new units.', true);
+    });
+  }
+}
+
 /* ---------- Events ---------- */
 
 els.form.addEventListener('submit', (e) => {
@@ -343,7 +370,9 @@ els.form.addEventListener('submit', (e) => {
 });
 
 els.locateBtn.addEventListener('click', handleGeolocate);
+els.unitToggle.addEventListener('click', handleUnitToggle);
 
 /* ---------- Initial load ---------- */
 
+renderUnitToggle();
 handleSearch('New York');
