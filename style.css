@@ -26,6 +26,10 @@
   --font-ui: 'IBM Plex Sans', sans-serif;
 
   --radius: 10px;
+
+  /* -- fluid layout tokens: scale smoothly from phone to laptop -- */
+  --content-max: 960px;
+  --edge-pad: clamp(16px, 4vw, 32px);
 }
 
 * { box-sizing: border-box; }
@@ -46,9 +50,9 @@ body {
 }
 
 .app {
-  max-width: 780px;
+  max-width: var(--content-max);
   margin: 0 auto;
-  padding: 28px 20px 60px;
+  padding: clamp(18px, 3vw, 32px) var(--edge-pad) 60px;
 }
 
 /* ===== Topbar ===== */
@@ -56,8 +60,9 @@ body {
 .topbar {
   display: flex;
   align-items: center;
-  gap: 16px;
+  gap: clamp(8px, 2vw, 16px);
   margin-bottom: 22px;
+  flex-wrap: wrap;
 }
 
 .brand {
@@ -77,7 +82,8 @@ body {
 }
 
 .search {
-  flex: 1;
+  flex: 1 1 160px;
+  min-width: 0;
   display: flex;
   align-items: center;
   background: var(--bg-panel);
@@ -93,6 +99,7 @@ body {
 
 .search-input {
   flex: 1;
+  min-width: 0;
   background: transparent;
   border: none;
   outline: none;
@@ -122,6 +129,29 @@ body {
 .search-btn { margin: 3px; border: none; background: transparent; }
 .search-btn:hover, .locate-btn:hover { color: var(--accent-sky); border-color: var(--accent-sky); }
 
+/* unit toggle */
+.unit-toggle {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  height: 34px;
+  padding: 0 10px;
+  background: var(--bg-panel-raised);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  cursor: pointer;
+  font-family: var(--font-data);
+  font-size: 12px;
+  color: var(--text-faint);
+}
+
+.unit-toggle:hover { border-color: var(--accent-sky); }
+
+.unit-option { color: var(--text-faint); transition: color 0.15s ease; }
+.unit-option.is-active { color: var(--accent-sky); }
+.unit-sep { color: var(--text-faint); font-size: 10px; }
+
 /* ===== Status line ===== */
 
 .status-line {
@@ -149,12 +179,13 @@ body {
   display: flex;
   justify-content: space-between;
   align-items: flex-end;
+  flex-wrap: wrap;
   margin-bottom: 16px;
   gap: 12px;
 }
 
 .location-name {
-  font-size: 26px;
+  font-size: clamp(22px, 3.4vw, 28px);
   font-weight: 600;
   margin: 0;
   letter-spacing: -0.01em;
@@ -187,19 +218,20 @@ body {
 /* ===== Hero ===== */
 
 .hero {
-  padding: 26px 24px;
+  padding: clamp(20px, 3vw, 30px) clamp(18px, 3vw, 28px);
   margin-bottom: 14px;
 }
 
 .hero-main {
   display: flex;
   align-items: center;
-  gap: 20px;
+  gap: clamp(14px, 3vw, 22px);
+  flex-wrap: wrap;
 }
 
 .hero-icon {
-  width: 64px;
-  height: 64px;
+  width: clamp(52px, 8vw, 68px);
+  height: clamp(52px, 8vw, 68px);
   flex-shrink: 0;
 }
 
@@ -208,11 +240,12 @@ body {
 .hero-temp-block {
   display: flex;
   flex-direction: column;
+  min-width: 0;
 }
 
 .hero-temp {
   font-family: var(--font-data);
-  font-size: 56px;
+  font-size: clamp(38px, 8vw, 58px);
   font-weight: 500;
   line-height: 1;
   color: var(--text-primary);
@@ -235,11 +268,13 @@ body {
 
 .hero-feels span { color: var(--text-primary); }
 
-/* ===== Instruments ===== */
+/* ===== Instruments =====
+   auto-fit lets this reflow from 2-up on a phone to 4+ up on a
+   laptop without hardcoded breakpoints. */
 
 .instruments {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
   gap: 12px;
   margin-bottom: 14px;
 }
@@ -343,7 +378,7 @@ body {
 /* ===== Hourly ===== */
 
 .hourly {
-  padding: 18px 18px 20px;
+  padding: 18px clamp(12px, 2.5vw, 18px) 20px;
   margin-bottom: 14px;
 }
 
@@ -353,6 +388,8 @@ body {
   overflow-x: auto;
   padding-bottom: 4px;
   scrollbar-width: thin;
+  /* keep the strip from ever forcing the page itself to scroll sideways */
+  max-width: 100%;
 }
 
 .hour-card {
@@ -385,11 +422,13 @@ body {
   color: var(--text-primary);
 }
 
-/* ===== Forecast ===== */
+/* ===== Forecast =====
+   auto-fit + a sane minimum keeps 5 cards on a laptop and lets
+   them wrap onto a second row instead of squashing on a phone. */
 
 .forecast-grid {
   display: grid;
-  grid-template-columns: repeat(5, 1fr);
+  grid-template-columns: repeat(auto-fit, minmax(84px, 1fr));
   gap: 10px;
 }
 
@@ -436,12 +475,36 @@ body {
 
 /* ===== Responsive ===== */
 
-@media (max-width: 640px) {
-  .instruments { grid-template-columns: repeat(2, 1fr); }
-  .forecast-grid { grid-template-columns: repeat(5, minmax(56px, 1fr)); gap: 6px; }
-  .day-card { padding: 12px 4px; }
-  .hero-temp { font-size: 44px; }
+@media (max-width: 480px) {
   .brand-name { display: none; }
+  .topbar { gap: 8px; }
+  .instruments { grid-template-columns: repeat(2, 1fr); }
+  .location-row { align-items: flex-start; }
+}
+
+@media (min-width: 1000px) {
+  /* laptop+: give the panel a bit more air instead of stretching
+     everything edge to edge, and let the hero + instruments sit
+     side by side so the width is actually used. */
+  .dashboard {
+    display: grid;
+    grid-template-columns: 1.1fr 1fr;
+    grid-template-areas:
+      "location location"
+      "hero instruments"
+      "hourly hourly"
+      "forecast forecast";
+    gap: 14px;
+  }
+  .location-row { grid-area: location; margin-bottom: 0; }
+  .hero { grid-area: hero; margin-bottom: 0; height: 100%; }
+  .instruments {
+    grid-area: instruments;
+    grid-template-columns: repeat(2, 1fr);
+    margin-bottom: 0;
+  }
+  .hourly { grid-area: hourly; }
+  .forecast { grid-area: forecast; }
 }
 
 /* ===== Accessibility ===== */
